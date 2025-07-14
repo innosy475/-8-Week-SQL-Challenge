@@ -82,6 +82,12 @@ FULL JOIN meat_pizza_toppings
 ON meat_toppings = topping_id;
 
 
+--pizza_names clean
+UPDATE pizza_names
+SET
+	pizza_name = CASE WHEN pizza_id = 1 THEN 'Meat Lovers' ELSE 'Vegetarian' END;
+
+
 --veggie pizza order count
 DROP VIEW IF EXISTS veggie_order_count;
 CREATE VIEW veggie_order_count AS
@@ -127,3 +133,30 @@ ON excluded_toppings = topping_id
 GROUP BY topping_name, topping_id
 ORDER BY excluded_topping_count DESC;
 
+
+--create schema for runner ratings
+DROP SCHEMA IF EXISTS pizza_runner_rating;
+CREATE SCHEMA pizza_runner_rating;
+SET search_path = pizza_runner_rating;
+
+DROP TABLE IF EXISTS runner_ratings;
+CREATE TABLE runner_ratings (
+	"runner_id" INTEGER,
+	"runner_rating" INTEGER,
+	"order_id" INTEGER,
+	"duration" INTEGER
+);
+
+INSERT INTO runner_ratings (
+	"runner_id", "order_id", "duration", "runner_rating"
+)
+SELECT runner_id, order_id, duration,
+CASE 
+	WHEN duration <= 15 THEN 5
+	WHEN duration > 15 AND duration <= 20 THEN 4
+	WHEN duration > 20 AND duration <= 25 THEN 3
+	WHEN duration > 25 AND duration <= 30 THEN 2
+	WHEN duration > 31 THEN 1
+	ELSE NULL
+END AS runner_rating
+FROM pizza_runner.runner_orders;

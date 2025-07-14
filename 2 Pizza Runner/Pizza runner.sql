@@ -213,6 +213,25 @@ LIMIT 1;
 --		Meat Lovers - Exclude Cheese, Bacon - Extra Mushroom, Peppers
 --		Generate an alphabetically ordered comma separated ingredient list for each pizza order from the customer_orders table and add a 2x in front of any relevant ingredients
 --		For example: "Meat Lovers: 2xBacon, Beef, ... , Salami"
+
+DROP VIEW IF EXISTS toppings_id;
+CREATE VIEW toppings_id AS
+SELECT *,
+	UNNEST(STRING_TO_ARRAY(toppings, ','))::INTEGER AS topping_id
+FROM customer_orders
+JOIN pizza_recipes
+USING (pizza_id);
+
+WITH ingredients AS (
+SELECT *
+FROM pizza_toppings
+JOIN toppings_id
+USING (topping_id)
+)
+SELECT order_id, customer_id, pizza_id, STRING_AGG(topping_name, ', ')
+FROM ingredients
+GROUP BY order_id, customer_id, pizza_id, exclusions, extras;
+
 -- 5. What is the total quantity of each ingredient used in all delivered pizzas sorted by most frequent first?
 -- veggie_order_count, meat_order_count, extra_toppings_count, exclusion_toppings_count
 
@@ -224,7 +243,6 @@ SELECT ptn.topping_id,
 	   COALESCE(extra_topping_count, 0) AS extra_topping_count,
 	   COALESCE(excluded_topping_count, 0) AS excluded_topping_count,
 	   COALESCE(veggie_count, 0) + COALESCE(meat_count, 0) + COALESCE(extra_topping_count, 0) - COALESCE(excluded_topping_count, 0) AS total_ingredients_used
-FROM pizza_topping_names ptn
 FULL JOIN veggie_order_count
 USING (topping_id)
 FULL JOIN meat_order_count
@@ -238,9 +256,116 @@ ORDER BY total_ingredients_used DESC;
 
 -- D. Pricing and Ratings
 -- 1. If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes - how much money has Pizza Runner made so far if there are no delivery fees?
+SELECT '$ ' || SUM(pizza_sales) AS total_sales
+FROM(SELECT pizza_name,
+CASE
+	WHEN pizza_name = 'Meat Lovers' THEN pizza_count * 12
+	WHEN pizza_name = 'Vegetarian' THEN pizza_count * 10
+	ELSE NULL
+END AS pizza_sales
+FROM (
+SELECT pizza_name, COUNT(*) AS pizza_count
+FROM runner_orders
+JOIN customer_orders
+USING (order_id)
+JOIN pizza_names
+USING (pizza_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY pizza_name
+));
 -- 2. What if there was an additional $1 charge for any pizza extras?
+WITH pizza_count AS (
+SELECT pizza_name, COUNT(*) AS pizza_count
+FROM runner_orders
+JOIN customer_orders
+USING (order_id)
+JOIN pizza_names
+USING (pizza_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY pizza_name
+),
+extras_count AS (
+SELECT pizza_name, COUNT(extras) AS extras_count
+FROM customer_orders
+JOIN pizza_names 
+USING (pizza_id)
+WHERE extras IS NOT NULL
+GROUP BY pizza_name
+),
+pizza_sum AS (
+SELECT
+  pc.pizza_name,
+  pc.pizza_count,
+  ec.extras_count,
+  CASE
+    WHEN pc.pizza_name = 'Meat Lovers' THEN pc.pizza_count * 12
+    WHEN pc.pizza_name = 'Vegetarian' THEN pc.pizza_count * 10
+    ELSE NULL
+  END AS pizza_sales
+FROM pizza_count pc
+LEFT JOIN extras_count ec ON pc.pizza_name = ec.pizza_name)
+SELECT '$ ' || SUM(pizza_sales) + SUM(extras_count) AS total_sales
+FROM pizza_sum;
+
 --		Add cheese is $1 extra
+
+WITH pizza_count AS (
+SELECT pizza_name, COUNT(*) AS pizza_count
+FROM runner_orders
+JOIN customer_orders
+USING (order_id)
+JOIN pizza_names
+USING (pizza_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY pizza_name
+),
+extras_count AS (
+SELECT pizza_name, COUNT(extras) AS extras_count
+FROM customer_orders
+JOIN pizza_names 
+USING (pizza_id)
+WHERE extras IS NOT NULL
+GROUP BY pizza_name
+),
+extras_table AS (
+SELECT *, UNNEST(STRING_TO_ARRAY(extras, ','))::INTEGER AS extras_id
+FROM customer_orders
+WHERE extras IS NOT NULL
+),
+extra_cheese AS (
+SELECT pizza_name, topping_name, COUNT(topping_name) AS cheese_count
+FROM extras_table
+JOIN pizza_toppings
+ON topping_id = extras_id
+JOIN pizza_names
+USING (pizza_id)
+WHERE topping_name = 'Cheese'
+GROUP BY topping_name, pizza_name
+),
+pizza_sum AS (
+SELECT
+  pc.pizza_name,
+  pc.pizza_count,
+  ec.extras_count,
+  cheese_count,
+  CASE
+    WHEN pc.pizza_name = 'Meat Lovers' THEN pc.pizza_count * 12
+    WHEN pc.pizza_name = 'Vegetarian' THEN pc.pizza_count * 10
+    ELSE NULL
+  END AS pizza_sales
+FROM pizza_count pc
+LEFT JOIN extras_count ec ON pc.pizza_name = ec.pizza_name
+LEFT JOIN extra_cheese ON pc.pizza_name = extra_cheese.pizza_name
+)
+SELECT '$ ' || SUM(pizza_sales) + SUM(extras_count) + SUM(cheese_count) AS total_sales
+FROM pizza_sum;
+
 -- 3. The Pizza Runner team now wants to add an additional ratings system that allows customers to rate their runner, how would you design an additional table for this new dataset - generate a schema for this new table and insert your own data for ratings for each successful customer order between 1 to 5.
+SET search_path = pizza_runner_rating;
+
+SELECT *
+FROM runner_ratings;
+
 -- 4. Using your newly generated table - can you join all of the information together to form a table which has the following information for successful deliveries?
 --		customer_id
 --		order_id
@@ -252,5 +377,52 @@ ORDER BY total_ingredients_used DESC;
 --		Delivery duration
 --		Average speed
 --		Total number of pizzas
--- 5. If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
 
+WITH all_orders AS (
+SELECT co.customer_id AS customer_id, 
+	   co.order_id AS order_id, 
+	   ro.runner_id AS runner_id, 
+	   runner_rating, 
+	   order_time, 
+	   pickup_time, 
+	   ROUND(EXTRACT(EPOCH FROM (pickup_time::TIMESTAMP - order_time))/60, 2) AS prep_time,
+	   ro.duration AS duration,
+	   ROUND(distance * 60/ro.duration, 2) AS speed  --speed = (km/hr)(distance/duration) || duration = min(1hr/60min)
+FROM runner_ratings 
+JOIN pizza_runner.runner_orders ro
+USING (order_id)
+JOIN pizza_runner.customer_orders co
+USING (order_id)
+WHERE pickup_time IS NOT NULL
+)
+SELECT *, COUNT (*) AS pizza_count
+FROM all_orders
+GROUP BY customer_id, 
+	   order_id, 
+	   runner_id, 
+	   runner_rating, 
+	   order_time, 
+	   pickup_time,
+	   duration,
+	   prep_time,
+	   all_orders.speed;
+	   
+-- 5. If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
+SET search_path = pizza_runner;
+SELECT '$ ' || SUM(pizza_sales) AS total_sales
+FROM(SELECT pizza_name,
+CASE
+	WHEN pizza_name = 'Meat Lovers' THEN pizza_count * 12 - (total_distance * 0.3)
+	WHEN pizza_name = 'Vegetarian' THEN pizza_count * 10 - (total_distance * 0.3)
+	ELSE NULL
+END AS pizza_sales
+FROM (
+SELECT pizza_name, SUM(distance) AS total_distance, COUNT(*) AS pizza_count
+FROM runner_orders
+JOIN customer_orders
+USING (order_id)
+JOIN pizza_names
+USING (pizza_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY pizza_name
+));
