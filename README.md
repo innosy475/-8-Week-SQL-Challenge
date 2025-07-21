@@ -13,6 +13,12 @@ Here are my solutions for every case study in Danny Ma's SQL challenge:
 
 Feel free to leave a comment on any of the case studies I’ve solved.
 
+
+I used pgAdmin4(PostgreSQL) to run queries.
+
+<img src="https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fgv17o99r0pphsmj7is4f.png" alt="Image" width="259" height="195">
+
+
 # About me
 
 I took on this challenge to strengthen my SQL skills, especially since I don’t have any formal work experience in this field yet. It took me two weeks to complete all of Danny Ma’s challenges, and through the process, I learned far more than I ever did from YouTube tutorials or DataCamp courses. This project truly deepened my understanding of SQL and improved my querying skills.
