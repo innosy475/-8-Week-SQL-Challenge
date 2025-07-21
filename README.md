@@ -3,7 +3,7 @@ The 8 Week SQL Challenge is a free, self-paced learning project created by Danny
 
 Here are my solutions for every case study in Danny Ma's SQL challenge:
 
-<p><a href="https://github.com/innosy475/-8-Week-SQL-Challenge/tree/main/1%20Danny's%20Diner">1 Danny's Diner</a></p>
+🍽 <p><a href="https://github.com/innosy475/-8-Week-SQL-Challenge/tree/main/1%20Danny's%20Diner">1 Danny's Diner</a></p>
 
 
 Feel free to leave a comment in any of the case study that I've solved.
