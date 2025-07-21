@@ -14,6 +14,7 @@ Here are my solutions for every case study in Danny Ma's SQL challenge:
 Feel free to leave a comment on any of the case studies I’ve solved.
 
 You can also access the challenge here: [8 Week SQL Challenge](https://8weeksqlchallenge.com/)
+
 Credits to [Danny Ma](https://www.linkedin.com/in/datawithdanny/)
 
 #### pgAdmin4(PostgreSQL) was used to run queries.
