@@ -52,6 +52,7 @@ CREATE TABLE clique_bait.events (
 );
 
 ```
+
 ```dbml
 
 TABLE event_identifier {
@@ -102,7 +103,8 @@ Ref: "events"."event_time" < "campaign_identifier"."start_date"
 Ref: "events"."event_time" < "campaign_identifier"."end_date"
 
 ```
-[CliqueBaitERD](CliqueBaitERD.png)
+
+![CliqueBaitERD](CliqueBaitERD.png)
 ***
 ## B. Digital Analysis
 Using the available datasets - answer the following questions using a single query for each one:
@@ -113,7 +115,7 @@ SELECT COUNT(DISTINCT user_id) AS users_count
 FROM users;
 
 ```
-[Week-6-A-1](CliqueBaitOutput/Week-6-A-1.png)
+![Week-6-A-1](CliqueBaitOutput/Week-6-A-1.png)
 ***
 #### 2. How many cookies does each user have on average?
 ```sql
@@ -129,7 +131,7 @@ SELECT
 FROM cookies;
 
 ```
-[Week-6-A-2](CliqueBaitOutput/Week-6-A-2.png)
+![Week-6-A-2](CliqueBaitOutput/Week-6-A-2.png)
 ***
 #### 3. What is the unique number of visits by all users per month?
 ```sql
@@ -144,7 +146,7 @@ FROM visit_month
 GROUP BY month;
 
 ```
-[Week-6-A-3](CliqueBaitOutput/Week-6-A-3.png)
+![Week-6-A-3](CliqueBaitOutput/Week-6-A-3.png)
 ***
 #### 4. What is the number of events for each event type?
 ```sql
@@ -155,7 +157,7 @@ FROM events
 GROUP BY event_type;
 
 ```
-[Week-6-A-4](CliqueBaitOutput/Week-6-A-4.png)
+![Week-6-A-4](CliqueBaitOutput/Week-6-A-4.png)
 ***
 #### 5. What is the percentage of visits which have a purchase event?
 ```sql
@@ -168,7 +170,7 @@ USING (event_type)
 WHERE event_name = 'Purchase';
 
 ```
-[Week-6-A-5](CliqueBaitOutput/Week-6-A-5.png)
+![Week-6-A-5](CliqueBaitOutput/Week-6-A-5.png)
 ***
 #### 6. What is the percentage of visits which view the checkout page but do not have a purchase event?
 ```sql
@@ -184,7 +186,7 @@ SELECT ROUND(100 * (1 - SUM(purchase)::NUMERIC/SUM(checkout)), 2) AS perc_no_pur
 FROM view_no_purchase;
 
 ```
-[Week-6-A-6](CliqueBaitOutput/Week-6-A-6.png)
+![Week-6-A-6](CliqueBaitOutput/Week-6-A-6.png)
 ***
 #### 7. What are the top 3 pages by number of views?
 ```sql
@@ -199,7 +201,7 @@ ORDER BY view_per_page DESC
 LIMIT 3;
 
 ```
-[Week-6-A-7](CliqueBaitOutput/Week-6-A-7.png)
+![Week-6-A-7](CliqueBaitOutput/Week-6-A-7.png)
 ***
 #### 8. What is the number of views and cart adds for each product category?
 ```sql
@@ -217,7 +219,7 @@ GROUP BY product_category
 ORDER BY page_view DESC;
 
 ```
-[Week-6-A-8](CliqueBaitOutput/Week-6-A-8.png)
+![Week-6-A-8](CliqueBaitOutput/Week-6-A-8.png)
 ***
 #### 9. What are the top 3 products by purchases?
 ```sql
@@ -246,7 +248,7 @@ ORDER BY purchase_count DESC
 LIMIT 3;
 
 ```
-[Week-6-A-9](CliqueBaitOutput/Week-6-A-9.png)
+![Week-6-A-9](CliqueBaitOutput/Week-6-A-9.png)
 ***
 ## C. Product Funnel Analysis
 #### 1. Using a single SQL query - create a new output table which has the following details:
@@ -292,8 +294,7 @@ GROUP BY page_name
 ORDER BY total_page_view DESC;
 
 ```
-[Week-6-B-1-A](CliqueBaitOutput/Week-6-B-1-B.png)
-***
+![Week-6-B-1-A](CliqueBaitOutput/Week-6-B-1-A.png)
 #### Additionally, create another table which further aggregates the data for the above points but this time for each product category instead of individual products.
 ```sql
 
@@ -333,7 +334,7 @@ GROUP BY product_category
 ORDER BY total_page_view DESC;
 
 ```
-[Week-6-A-1](CliqueBaitOutput/Week-6-A-1.png)
+![Week-6-B-1-B](CliqueBaitOutput/Week-6-B-1-B.png)
 ***
 #### Use your 2 new output tables - answer the following questions:
 #### 2. Which product had the most views, cart adds and purchases?
@@ -349,7 +350,7 @@ FROM product_name_info
 GROUP BY page_name, total_page_view, total_add_cart, total_purchase;
 
 ```
-[Week-6-B-2](CliqueBaitOutput/Week-6-B-2.png)
+![Week-6-B-2](CliqueBaitOutput/Week-6-B-2.png)
 ***
 #### 3. Which product was most likely to be abandoned?
 ```sql
@@ -360,7 +361,7 @@ FROM product_name_info
 ORDER BY most_abandoned;
 
 ```
-[Week-6-B-3](CliqueBaitOutput/Week-6-B-3.png)
+![Week-6-B-3](CliqueBaitOutput/Week-6-B-3.png)
 ***
 #### 4. Which product had the highest view to purchase percentage?
 ```sql
@@ -371,7 +372,7 @@ FROM product_name_info
 ORDER BY view_to_purchase_perc DESC;
 
 ```
-[Week-6-B-4](CliqueBaitOutput/Week-6-B-4.png)
+![Week-6-B-4](CliqueBaitOutput/Week-6-B-4.png)
 ***
 #### 5. What is the average conversion rate from view to cart add?
 ```sql
@@ -381,7 +382,7 @@ SELECT
 FROM product_name_info;
 
 ```
-[Week-6-B-5](CliqueBaitOutput/Week-6-B-5.png)
+![Week-6-B-5](CliqueBaitOutput/Week-6-B-5.png)
 ***
 #### 6. What is the average conversion rate from cart add to purchase?
 ```sql
@@ -391,7 +392,7 @@ SELECT
 FROM product_name_info;
 
 ```
-[Week-6-B-6](CliqueBaitOutput/Week-6-B-6.png)
+![Week-6-B-6](CliqueBaitOutput/Week-6-B-6.png)
 ***
 ## C. Campaigns Analysis
 #### Generate a table that has 1 single row for every unique visit_id record and has the following columns:
@@ -429,5 +430,5 @@ USING (event_type)
 GROUP BY user_id, visit_id, campaign_name
 
 ```
-[Week-6-C](CliqueBaitOutput/Week-6-C.png)
+![Week-6-C](CliqueBaitOutput/Week-6-C.png)
 ***
