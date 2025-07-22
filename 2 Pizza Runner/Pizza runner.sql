@@ -378,6 +378,7 @@ FROM runner_ratings;
 --		Average speed
 --		Total number of pizzas
 
+SET search_path = pizza_runner;
 WITH all_orders AS (
 SELECT co.customer_id AS customer_id, 
 	   co.order_id AS order_id, 
@@ -408,7 +409,7 @@ GROUP BY customer_id,
 	   all_orders.speed;
 	   
 -- 5. If a Meat Lovers pizza was $12 and Vegetarian $10 fixed prices with no cost for extras and each runner is paid $0.30 per kilometre traveled - how much money does Pizza Runner have left over after these deliveries?
-SET search_path = pizza_runner;
+
 SELECT '$ ' || SUM(pizza_sales) AS total_sales
 FROM(SELECT pizza_name,
 CASE
